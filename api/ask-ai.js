@@ -1,12 +1,16 @@
 export default async function handler(req, res) {
   const { mood } = req.body;
-  const key = process.env.OPENAI_API_KEY;
+
+  // ⚠️ TEMPORARY — Replace this with your real OpenAI API key
+  const key = "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";
 
   if (!key) {
     return res.status(500).json({ reply: "Missing OpenAI API Key." });
   }
 
   try {
+    const prompt = `Suggest a healing sound frequency or tone to calm someone feeling "${mood}"`;
+
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -19,11 +23,11 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: "You are a relaxation assistant that suggests healing sound frequencies.",
+            content: "You are a calming wellness assistant who recommends sound healing tones.",
           },
           {
             role: "user",
-            content: `What healing sound or frequency would you suggest to someone feeling "${mood}"?`,
+            content: prompt,
           },
         ],
       }),
@@ -31,12 +35,9 @@ export default async function handler(req, res) {
 
     const data = await openaiRes.json();
 
-    if (data?.choices?.[0]?.message?.content) {
-      res.status(200).json({ reply: data.choices[0].message.content.trim() });
-    } else {
-      res.status(200).json({ reply: "No AI response received from OpenAI." });
-    }
-  } catch (err) {
-    res.status(500).json({ reply: "AI Error: " + err.message });
+    const reply = data?.choices?.[0]?.message?.content?.trim() || "No suggestion received from OpenAI.";
+    res.status(200).json({ reply });
+  } catch (error) {
+    res.status(500).json({ reply: "AI Error: " + error.message });
   }
 }
