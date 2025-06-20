@@ -9,11 +9,11 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${key}`
+        "Authorization": `Bearer ${key}`,
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }]
+        messages: [{ role: "user", content: prompt }],
       })
     });
     const data = await response.json();
