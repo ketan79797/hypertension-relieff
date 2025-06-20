@@ -1,14 +1,12 @@
 export default async function handler(req, res) {
+  const { mood } = req.body;
+  const key = process.env.OPENAI_API_KEY;
+
+  if (!key) {
+    return res.status(500).json({ reply: "Missing OpenAI API Key." });
+  }
+
   try {
-    const { mood } = req.body;
-    const key = process.env.OPENAI_API_KEY;
-
-    if (!key) {
-      return res.status(500).json({ reply: "Missing API Key" });
-    }
-
-    const prompt = `Suggest a healing sound frequency or tone to calm someone feeling "${mood}".`;
-
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -17,16 +15,28 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        messages: [
+          {
+            role: "system",
+            content: "You are a relaxation assistant that suggests healing sound frequencies.",
+          },
+          {
+            role: "user",
+            content: `What healing sound or frequency would you suggest to someone feeling "${mood}"?`,
+          },
+        ],
       }),
     });
 
     const data = await openaiRes.json();
 
-    const reply = data?.choices?.[0]?.message?.content || "No suggestion received from AI.";
-
-    res.status(200).json({ reply });
-  } catch (error) {
-    res.status(500).json({ reply: "AI Error: " + error.message });
+    if (data?.choices?.[0]?.message?.content) {
+      res.status(200).json({ reply: data.choices[0].message.content.trim() });
+    } else {
+      res.status(200).json({ reply: "No AI response received from OpenAI." });
+    }
+  } catch (err) {
+    res.status(500).json({ reply: "AI Error: " + err.message });
   }
 }
